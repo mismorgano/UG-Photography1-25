@@ -1,0 +1,4 @@
+EXIF FNumber
+EXIF ExposureTime
+EXIF ISOSpeedRatings
+Image DateTime
