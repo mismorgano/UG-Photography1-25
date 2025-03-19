@@ -66,7 +66,7 @@
 }
 
 
-#let image_format(img_number, min_img_number: 0, images: (), meta: ()) = {
+#let image_format(img_number, min_img_number: 0, meta: ()) = {
   let index = img_number - min_img_number
   let img_path = create_image_path(img_number)
   let img = meta.at(index)
