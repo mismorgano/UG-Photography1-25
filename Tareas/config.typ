@@ -3,7 +3,7 @@
 #import themes.university: *
 
 
-#let template(title, doc) = {
+#let template(title: [], doc) = {
   show: university-theme.with(aspect-ratio: "4-3", config-info(
     title: [#title],
     subtitle: [_Fotografía 1 - Diseño Gráfico_],
