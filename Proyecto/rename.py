@@ -1,13 +1,27 @@
 from pathlib import Path
-import os
 import argparse
-import glob
 from itertools import count
 from datetime import datetime
 from functools import partial
-import exifread 
-def file_in_range(file: Path, start_date: datetime, end_date:datetime):
-    pass
+import exifread
+
+
+def get_datetime(img: Path):
+    """Get the Image DateTime metadata"""
+    with open(img, "rb") as file_handle:
+        tags = exifread.process_file(file_handle, details=False)
+        time = str(tags.get("Image DateTime"))
+        time = time.replace(":", "-", 2)
+
+    return datetime.fromisoformat(time)
+
+
+def is_in_dates(img: Path, start_date: datetime, end_date: datetime):
+    """Check if the image date time is in the range."""
+    date = get_datetime(img=img)
+
+    return start_date <= date and date <= end_date
+
 
 def rename(old_path: Path, new_path: Path):
     """Rename a file from old_path to new_path."""
@@ -19,12 +33,6 @@ def rename(old_path: Path, new_path: Path):
         return
     old_path.rename(new_path)
     print(f"[OK] Renamed: {old_path.name} -> {new_path.name}")
-
-
-def read_images(directory: Path, wildcard: str):
-    """Return a list of image paths matching the wildcard."""
-    pattern = str(directory / wildcard)
-    return [Path(p) for p in glob.glob(pattern)]
 
 
 def rename_to_end(directory: Path, images: list[Path], start_index: int):
@@ -39,17 +47,17 @@ def rename_to_end(directory: Path, images: list[Path], start_index: int):
 
     return renamed
 
-def is_in_dates(img: Path, start_date:datetime, end_date: datetime):
-    from os.path import getatime, getmtime, getctime
-    
-    time = os.path.getctime(img)
-    date = datetime.fromtimestamp(time)
 
-    return start_date < date and date < end_date
+def read_images(directory: Path, start_date: datetime, end_date: datetime):
+    """Return a list of image paths matching the wildcard."""
+    files = (directory / f for f in directory.iterdir())
 
-    print(time, datetime.fromtimestamp(time))
-    print(datetime.fromtimestamp(getatime(img)), datetime.fromtimestamp(getctime(img)), datetime.fromtimestamp(getmtime(img)))
-    print(getctime(img) < datetime.fromtimestamp(getmtime(img)))
+    filter_images = filter(
+        partial(is_in_dates, start_date=start_date, end_date=end_date), files
+    )
+    images = sorted(filter_images, key=get_datetime)
+    return images
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -57,69 +65,33 @@ def main():
     )
     parser.add_argument("dir", type=Path, help="Directory containing images")
     parser.add_argument("last", type=int, help="Starting number for renaming")
-    parser.add_argument("start_date", help="start date")
-    parser.add_argument("end_date", help="end date")
-
-    parser.add_argument(
-        "-im",
-        "--images",
-        default="*_1.JPG",
-        help="Image filename pattern to match (wildcards like *_1.jpg)",
-    )
+    parser.add_argument("start_date", type=datetime.fromisoformat, help="start date")
+    parser.add_argument("end_date", type=datetime.fromisoformat, help="end date")
 
     args = parser.parse_args()
     directory: Path = args.dir
     start_index: int = args.last
-    pattern: str = args.images
 
     start_date = args.start_date
     end_date = args.end_date
-    
-    a = datetime.fromisoformat(start_date)
-    b = datetime.fromisoformat(end_date)
-    # print(datetime.fromisoformat(start_date))
-    # print(datetime.fromisoformat(end_date))
-    # # print([a, b])
-    # images = read_images(directory, pattern)
-    # print(images)
-    
-    # for img in images:
-    #     mtime = os.path.getmtime(img)
-    #     atime = os.path.getatime(img)
-    #     ctime = os.path.getctime(img)
-    #     # print(datetime.fromtimestamp(mtime), datetime.fromtimestamp(ctime))
-    #     print(is_in_dates(img, a, b))
-    # all(os.path.exists())
-    for f in os.listdir(directory)[-10:]:
-        p = Path(directory / f)
-        print(os.path.exists(p))
-    print(all((is_in_dates(Path(str(directory / f)), a, b)) for f in sorted(os.listdir(directory))))
-    files = sorted((directory / f for f in os.listdir(directory)))
-    x = filter(partial(is_in_dates, start_date=a, end_date=b), files)
-    for f in x:
-        with open(f, "rb") as file_handle:
-            tags = exifread.process_file(file_handle, details=False)
-        metadata = {"date": tags.get('Image DateTime')}   
-        date = str(metadata["date"])
-        date = date.replace(":", "-", 2)
-        print(date) 
-        print(datetime.fromisoformat(date))
 
-    # if not directory.is_dir():
-    #     print(f"[ERROR] Not a directory: {directory}")
-    #     return
+    if not directory.is_dir():
+        print(f"[ERROR] Not a directory: {directory}")
+        return
 
-    # image_list = read_images(directory, pattern)
-    # if not image_list:
-    #     print(f"[INFO] No images matched: {pattern}")
-    #     return
+    images = read_images(directory, start_date=start_date, end_date=end_date)
 
-    # print(f"[INFO] Found {len(image_list)} image(s) matching '{pattern}'")
-    # renamed = rename_to_end(directory, image_list, start_index)
+    if not images:
+        print("[INFO] No images found in the given date range.")
+        return
 
-    # print("\n[SUMMARY]")
-    # for old, new in renamed:
-    #     print(f"{old} -> {new}")
+    print(f"[INFO] Found {len(images)} image(s) to rename.")
+
+    renamed = rename_to_end(directory, images, start_index)
+
+    print("\n[SUMMARY]")
+    for old, new in renamed:
+        print(f"{old} -> {new}")
 
 
 if __name__ == "__main__":
