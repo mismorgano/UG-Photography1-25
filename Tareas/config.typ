@@ -30,12 +30,13 @@
   let exposure_time = img.at("EXIF ExposureTime")
   let ISO = img.at("EXIF ISOSpeedRatings")
   let date = img.at("Image DateTime")
-  [
-
-    - / Apertura: #f_number
-    - / Velocidad: #exposure_time
-    - / ISO: #ISO
-    - / Hora: #date
+  let mode = img.at("MakerNotes:EasyMode")
+  block(breakable: false)[
+    / Apertura: #f_number
+    / Velocidad: #exposure_time
+    / ISO: #ISO
+    / Hora: #date
+    / Modo: #mode
   ]
 }
 
@@ -72,7 +73,7 @@
     / Objeto: #emoji.dino.rex
     / Sol: #emoji.sun
     #if lightbulb1 != none {
-      [ / Foco: #emoji.lightbulb]
+      [ / Foco: #emoji.lightbulb ]
     }
   ]
 }
