@@ -2,19 +2,36 @@
 
 [[package]]
 name = "exifread"
-version = "3.0.0"
-description = "Read Exif metadata from tiff and jpeg files."
+version = "3.3.0"
+description = "Library to extract Exif information from digital camera image files."
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 files = [
-    {file = "ExifRead-3.0.0-py3-none-any.whl", hash = "sha256:2c5c59ef03b3bbee75b82b82d2498006b3c13509f35c9a76c7552faff73fa2d5"},
-    {file = "ExifRead-3.0.0.tar.gz", hash = "sha256:0ac5a364169dbdf2bd62f94f5c073970ab6694a3166177f5e448b10c943e2ca4"},
+    {file = "exifread-3.3.0-py3-none-any.whl", hash = "sha256:be97486f8136344764e2998f2a321ed41e1bb09c89fa9b5f5a5ab3079f26169a"},
+    {file = "exifread-3.3.0.tar.gz", hash = "sha256:5c7c9b0f1be18908db422acf9cfb4ec353828fc62ae45a3ebf9e9e16bb028765"},
 ]
 
 [package.extras]
-dev = ["mypy (==0.950)", "pylint (==2.13.8)"]
+dev = ["build (>=1.0,<2.0)", "pre-commit (>=2.21,<3.0)", "pylint (>=3.0,<4.0)"]
+test = ["pytest (>=7.4,<8.0)"]
+
+[[package]]
+name = "pyexiftool"
+version = "0.5.6"
+description = "Python wrapper for exiftool"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "PyExifTool-0.5.6-py3-none-any.whl", hash = "sha256:ac7d7836d2bf373f20aa558528f6b2222c4c0d896ed28c951a3ff8e6cec05a87"},
+    {file = "PyExifTool-0.5.6.tar.gz", hash = "sha256:22a972c1c212d1ad5f61916fded5057333dcc48fb8e42eed12d2ff9665b367ae"},
+]
+
+[package.extras]
+docs = ["packaging", "sphinx", "sphinx-autoapi", "sphinx-autodoc-typehints", "sphinx-rtd-theme"]
+json = ["orjson", "simplejson", "ujson"]
+test = ["packaging"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.13"
-content-hash = "ae2f741e6dff130a753ea2eda8df779320c059f19dfe9ea26148900059142c48"
+content-hash = "e204d846c855cffd2c2e7359d850b0c2ab15dfe783b7e84388244e4dd5f386f4"
