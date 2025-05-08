@@ -1,24 +1,111 @@
 import exifread
+import exiftool
 from pathlib import Path
 import logging
-import os
 import csv
 import argparse
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
+CANON_MODES = {
+    0: "Full auto",
+    1: "Manual",
+    2: "Landscape",
+    3: "Fast shutter",
+    4: "Slow shutter",
+    5: "Night",
+    6: "Gray Scale",
+    7: "Sepia",
+    8: "Portrait",
+    9: "Sports",
+    10: "Macro",
+    11: "Black & White",
+    12: "Pan focus",
+    13: "Vivid",
+    14: "Neutral",
+    15: "Flash Off",
+    16: "Long Shutter",
+    17: "Super Macro",
+    18: "Foliage",
+    19: "Indoor",
+    20: "Fireworks",
+    21: "Beach",
+    22: "Underwater",
+    23: "Snow",
+    24: "Kids & Pets",
+    25: "Night Snapshot",
+    26: "Digital Macro",
+    27: "My Colors",
+    28: "Movie Snap",
+    29: "Super Macro 2",
+    30: "Color Accent",
+    31: "Color Swap",
+    32: "Aquarium",
+    33: "ISO 3200",
+    34: "ISO 6400",
+    35: "Creative Light Effect",
+    36: "Easy",
+    37: "Quick Shot",
+    38: "Creative Auto",
+    39: "Zoom Blur",
+    40: "Low Light",
+    41: "Nostalgic",
+    42: "Super Vivid",
+    43: "Poster Effect",
+    44: "Face Self-timer",
+    45: "Smile",
+    46: "Wink Self-timer",
+    47: "Fisheye Effect",
+    48: "Miniature Effect",
+    49: "High-speed Burst",
+    50: "Best Image Selection",
+    51: "High Dynamic Range",
+    52: "Handheld Night Scene",
+    53: "Movie Digest",
+    54: "Live View Control",
+    55: "Discreet",
+    56: "Blur Reduction",
+    57: "Monochrome",
+    58: "Toy Camera Effect",
+    59: "Scene Intelligent Auto",
+    60: "High-speed Burst HQ",
+    61: "Smooth Skin",
+    62: "Soft Focus",
+    68: "Food",
+    84: "HDR Art Standard",
+    85: "HDR Art Vivid",
+    93: "HDR Art Bold",
+    257: "Spotlight",
+    258: "Night 2",
+    259: "Night+",
+    260: "Super Night",
+    261: "Sunset",
+    263: "Night Scene",
+    264: "Surface",
+    265: "Low Light 2",
+}
 
-def read_metadata(path: Path, properties: list, n: int):
+
+def read_metadata(image: Path, properties: list[str], n: int):
     """Reads metadata from an image file and includes the image number."""
-    if not path.exists():
-        logging.warning(f"File not found: {path}")
+    if not image.exists():
+        logging.warning(f"File not found: {image}")
         return {"Image Number": n, **{prop: None for prop in properties}}
 
-    with open(path, "rb") as file_handle:
-        tags = exifread.process_file(file_handle, details=False)
+    metadata = {"Image Number": n}
 
-    metadata = {"Image Number": n, **{prop: tags.get(prop) for prop in properties}}
+    for prop in properties:
 
+        if prop != "MakerNotes:EasyMode":
+            with open(image, "rb") as file_handle:
+                tags = exifread.process_file(file_handle, details=False)
+                metadata[prop] = tags.get(prop)
+        if prop == "MakerNotes:EasyMode":
+            with exiftool.ExifToolHelper() as et:
+                tags = et.get_tags(image, tags=prop)
+                value = tags[0].get(prop)
+                value = CANON_MODES.get(value, f"Unknown ({value})")
+                metadata[prop] = value
     return metadata
 
 
